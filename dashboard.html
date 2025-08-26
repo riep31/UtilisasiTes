@@ -37,9 +37,18 @@
       transition: all 0.3s ease;
     }
 
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
     .sidebar-header {
       padding: 24px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+      padding: 24px 15px;
     }
 
     .logo {
@@ -60,6 +69,47 @@
       justify-content: center;
       font-size: 16px;
       backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .logo-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    /* Toggle button */
+    .sidebar-collapse-btn {
+      position: absolute;
+      top: 50%;
+      right: -15px;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      background: #34495e;
+      border: 2px solid #2c3e50;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .sidebar-collapse-btn:hover {
+      background: #4a5f7a;
+    }
+
+    .sidebar.collapsed .sidebar-collapse-btn {
+      right: -15px;
     }
 
     .sidebar-nav {
@@ -79,6 +129,15 @@
       align-items: center;
       gap: 12px;
       font-size: 14px;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .nav-item {
+      padding: 12px 15px;
+      margin: 4px 12px;
+      justify-content: center;
     }
 
     .nav-item:hover,
@@ -89,9 +148,65 @@
       backdrop-filter: blur(10px);
     }
 
+    .sidebar.collapsed .nav-item:hover,
+    .sidebar.collapsed .nav-item.active {
+      transform: translateX(0);
+    }
+
     .nav-icon {
       width: 20px;
       text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-text {
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed .nav-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    /* Tooltip untuk collapsed state */
+    .nav-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #34495e;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 1002;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 65px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 5px 5px 5px 0;
+      border-color: transparent #34495e transparent transparent;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1002;
+    }
+
+    .sidebar.collapsed .nav-item:hover::after,
+    .sidebar.collapsed .nav-item:hover::before {
+      opacity: 1;
     }
 
     /* Mobile sidebar toggle */
@@ -117,6 +232,10 @@
       margin-left: 260px;
       min-height: 100vh;
       transition: all 0.3s ease;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
     }
 
     .top-header {
@@ -208,7 +327,6 @@
       font-size: 12px;
       font-weight: 600;
     }
-      
 
     .content {
       padding: 40px;
@@ -323,17 +441,27 @@
     @media (max-width: 1024px) {
       .sidebar {
         transform: translateX(-100%);
+        width: 260px;
       }
 
       .sidebar.active {
         transform: translateX(0);
       }
 
+      .sidebar.collapsed {
+        width: 260px;
+      }
+
+      .sidebar-collapse-btn {
+        display: none;
+      }
+
       .sidebar-toggle {
         display: block;
       }
 
-      .main-content {
+      .main-content,
+      .main-content.collapsed {
         margin-left: 0;
       }
 
@@ -368,6 +496,11 @@
 
       .header-actions {
         align-self: flex-end;
+      }
+
+      .nav-item::after,
+      .nav-item::before {
+        display: none;
       }
     }
 
@@ -480,35 +613,38 @@
       <div class="sidebar-header">
         <div class="logo">
           <div class="logo-icon">📑</div>
-          <span>Menu</span>
+          <span class="logo-text">Menu</span>
         </div>
+        <button class="sidebar-collapse-btn" onclick="toggleCollapse()">
+          <span id="collapse-icon">‹</span>
+        </button>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item active">
+        <a href="dashboard.html" class="nav-item active" data-tooltip="Dashboard">
           <span class="nav-icon">🏠</span>
-          Dashboard
+          <span class="nav-text">Dashboard</span>
         </a>
-        <a href="gudang/index.html" class="nav-item">
+        <a href="gudang/index.html" class="nav-item" data-tooltip="Gudang">
           <span class="nav-icon">📦</span>
-          Gudang
+          <span class="nav-text">Gudang</span>
         </a>
-        <a href="pegawai/index.html" class="nav-item">
+        <a href="pegawai/index.html" class="nav-item" data-tooltip="Pegawai">
           <span class="nav-icon">👨‍💼</span>
-          Pegawai
+          <span class="nav-text">Pegawai</span>
         </a>
-        <a href="laporan/index.html" class="nav-item">
+        <a href="laporan/index.html" class="nav-item" data-tooltip="Laporan">
           <span class="nav-icon">📑</span>
-          Laporan
+          <span class="nav-text">Laporan</span>
         </a>
-        <a href="setting.html" class="nav-item">
+        <a href="setting.html" class="nav-item" data-tooltip="Setting">
           <span class="nav-icon">⚙️</span>
-          Setting
+          <span class="nav-text">Setting</span>
         </a>
       </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="mainContent">
       <header class="top-header">
         <div class="header-brand">
           <div class="brand-logo">
@@ -579,6 +715,26 @@
   </div>
 
   <script>
+    // Toggle sidebar collapse
+    function toggleCollapse() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const collapseIcon = document.getElementById('collapse-icon');
+      
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('collapsed');
+      
+      // Update collapse icon
+      if (sidebar.classList.contains('collapsed')) {
+        collapseIcon.textContent = '›';
+      } else {
+        collapseIcon.textContent = '‹';
+      }
+      
+      // Save collapse state
+      localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+
     // Toggle sidebar for mobile
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -587,6 +743,33 @@
       sidebar.classList.toggle('active');
       overlay.classList.toggle('active');
     }
+
+    // Load collapse state on page load
+    window.addEventListener('load', function() {
+      const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const collapseIcon = document.getElementById('collapse-icon');
+      
+      if (isCollapsed && window.innerWidth > 1024) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('collapsed');
+        collapseIcon.textContent = '›';
+      }
+
+      // Add loading animation for cards
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+    });
 
     // Close sidebar when clicking on nav item (mobile)
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -612,29 +795,26 @@
       });
     });
 
-    // Add loading animation
-    window.addEventListener('load', function() {
-      const cards = document.querySelectorAll('.card');
-      cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        
-        setTimeout(() => {
-          card.style.opacity = '1';
-          card.style.transform = 'translateY(0)';
-        }, index * 100);
-      });
-    });
-
     // Handle window resize
     window.addEventListener('resize', function() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.querySelector('.sidebar-overlay');
+      const mainContent = document.getElementById('mainContent');
       
       if (window.innerWidth > 1024) {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
+        
+        // Restore collapse state on desktop
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed');
+          mainContent.classList.add('collapsed');
+        }
+      } else {
+        // Remove collapse state on mobile
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('collapsed');
       }
     });
   </script>
