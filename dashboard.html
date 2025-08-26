@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #334155;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #2c3e50;
+      color: white;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 4px 0 20px rgba(79, 70, 229, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar-nav {
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      display: block;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 12px 24px;
+      margin: 4px 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      transform: translateX(4px);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    /* Mobile sidebar toggle */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+
+    .top-header {
+      background: white;
+      padding: 20px 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid #f1f5f9;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 100px;
+      height: 50px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-info h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+      line-height: 1.2;
+    }
+
+    .brand-info p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 10px;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+
+    .user-profile:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+      
+
+    .content {
+      padding: 40px;
+    }
+
+    .welcome {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .welcome h2 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #1e293b;
+      font-weight: 800;
+    }
+
+    .welcome p {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 0;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      padding: 32px 24px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 1px solid #f1f5f9;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+      border-color: #e2e8f0;
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      display: block;
+      filter: grayscale(0.3);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.1);
+      filter: grayscale(0);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      color: #1e293b;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .card p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 40px;
+      background: white;
+      margin-top: 60px;
+      color: #64748b;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .footer-heart {
+      color: #ef4444;
+      animation: heartbeat 2s ease-in-out infinite;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .sidebar-toggle {
+        display: block;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .content {
+        padding: 32px 24px;
+      }
+
+      .top-header {
+        padding: 16px 20px;
+        padding-left: 70px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .header-brand {
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .brand-info h1 {
+        font-size: 18px;
+      }
+
+      .brand-info p {
+        font-size: 12px;
+      }
+
+      .header-actions {
+        align-self: flex-end;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 24px 20px;
+      }
+
+      .top-header {
+        padding: 16px 20px;
+        padding-left: 70px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .header-brand {
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .brand-info h1 {
+        font-size: 18px;
+      }
+
+      .brand-info p {
+        font-size: 12px;
+      }
+
+      .header-actions {
+        align-self: flex-end;
+      }
+
+      .welcome h2 {
+        font-size: 1.8rem;
+      }
+
+      .card-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .card {
+        padding: 28px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .top-header h1 {
+        font-size: 16px;
+      }
+
+      .brand-info h1 {
+        font-size: 16px;
+      }
+
+      .brand-info p {
+        font-size: 11px;
+      }
+
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      .welcome h2 {
+        font-size: 1.6rem;
+      }
+
+      .content {
+        padding: 20px 16px;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+    }
+
+    /* Overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Toggle Button (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">📑</div>
+          <span>Menu</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active">
+          <span class="nav-icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="gudang/index.html" class="nav-item">
+          <span class="nav-icon">📦</span>
+          Gudang
+        </a>
+        <a href="pegawai/index.html" class="nav-item">
+          <span class="nav-icon">👨‍💼</span>
+          Pegawai
+        </a>
+        <a href="laporan/index.html" class="nav-item">
+          <span class="nav-icon">📑</span>
+          Laporan
+        </a>
+        <a href="setting.html" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Setting
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-brand">
+          <div class="brand-logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
+          </div>
+          <div class="brand-info">
+            <h1>PT. Dagsap Endura Eatore</h1>
+            <p>Sistem Manajemen Gudang Terpadu</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="user-profile">
+            <div class="user-avatar">AD</div>
+            <span>Admin</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="welcome">
+          <h2>Dashboard Gudang</h2>
+          <p>Pilih menu untuk melihat data lebih detail.</p>
+        </div>
+
+        <div class="card-container">
+          <div class="card" onclick="window.location.href='gudang/index.html'">
+            <div class="card-icon">📦</div>
+            <h3>Gudang</h3>
+            <p>Status kapasitas dan stok racking untuk monitoring inventory secara real-time.</p>
+          </div>
+
+          <div class="card" onclick="window.location.href='pegawai/index.html'">
+            <div class="card-icon">👨‍💼</div>
+            <h3>Pegawai</h3>
+            <p>Data karyawan, divisi, dan level akses untuk manajemen SDM yang efektif.</p>
+          </div>
+
+          <div class="card" onclick="window.location.href='laporan/index.html'">
+            <div class="card-icon">📑</div>
+            <h3>Laporan</h3>
+            <p>Rekap laporan aktivitas gudang dan analisis data untuk insight bisnis.</p>
+          </div>
+
+          <div class="card" onclick="window.location.href='setting.html'">
+            <div class="card-icon">⚙️</div>
+            <h3>Setting</h3>
+            <p>Konfigurasi sistem dan pengguna untuk optimalisasi penggunaan aplikasi.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">📊</div>
+            <h3>Analitik</h3>
+            <p>Insight data visual dan grafik untuk monitoring performa operasional gudang.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon">🔔</div>
+            <h3>Notifikasi</h3>
+            <p>Alert dan pemberitahuan penting untuk update sistem dan aktivitas terbaru.</p>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        © 2025 Dashboard Gudang | Dibuat dengan <span class="footer-heart">❤️</span> untuk kebutuhan internal
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Toggle sidebar for mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    // Close sidebar when clicking on nav item (mobile)
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        if (window.innerWidth <= 1024) {
+          toggleSidebar();
+        }
+      });
+    });
+
+    // Add smooth click animation for cards
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mousedown', function() {
+        this.style.transform = 'translateY(-4px) scale(0.98)';
+      });
+      
+      card.addEventListener('mouseup', function() {
+        this.style.transform = 'translateY(-8px) scale(1)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+
+    // Add loading animation
+    window.addEventListener('load', function() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      if (window.innerWidth > 1024) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>
