@@ -15,12 +15,13 @@
     header {
       display:flex; 
       align-items:center; 
-      justify-content:space-between;
+      justify-content:flex-start;
       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
       padding:15px 20px; 
       color:#2c3e50; 
       box-shadow:0 2px 5px rgba(0,0,0,0.1);
       margin-bottom: 20px;
+      gap: 30px;
     }
     
     .logo { 
@@ -79,6 +80,7 @@
     .export{background:#27ae60;} 
     .print{background:#2980b9;} 
     .refresh{background:#f39c12;}
+    .back{background:#8e44ad;} /* Purple color for back button */
     
     .status { 
       display:flex; 
@@ -98,6 +100,27 @@
     .connected{background:#2ecc71;} 
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
+      border-radius: 8px;
+      font-size: 14px;
+      color: #000;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
 
     .filters{
       margin:0 20px 20px 20px;
@@ -173,6 +196,7 @@
     
     tr:nth-child(even){background:#f8f9fa;}
     tr:hover { background:#e3f2fd; }
+    tr.selected { background:#bbdefb !important; border-left: 4px solid #2196f3; }
     
     .totals{
       margin-top:15px;
@@ -231,8 +255,6 @@
       font-weight: bold;
     }
 
-
-
     /* Responsive */
     @media (max-width: 768px) {
       .filters {
@@ -265,6 +287,7 @@
         </div>
       </div>
       <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
         <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
         <button class="ctrl print" onclick="printTable()">🖨 Print</button>
         <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
@@ -273,6 +296,11 @@
         </div>
       </div>
     </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Finish Goods
+    </div>
 
     <!-- Filters -->
     <div class="filters">
@@ -316,6 +344,92 @@ let sheetName = 'LINKTOWEB'; // Finish Goods sheet
 let allRows = [];
 let currentSort = { index: -1, asc: true };
 
+// Function to get dashboard URL from various sources
+function getDashboardUrl() {
+  console.log('Current URL:', window.location.href);
+  console.log('Current Path:', window.location.pathname);
+  console.log('Referrer:', document.referrer);
+  
+  // Try to get dashboard URL from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  if (returnUrl) {
+    console.log('Using return URL:', returnUrl);
+    return decodeURIComponent(returnUrl);
+  }
+  
+  // Try to get from document referrer
+  if (document.referrer && document.referrer !== window.location.href) {
+    console.log('Using referrer URL:', document.referrer);
+    return document.referrer;
+  }
+  
+  // For GitHub Pages - specific URLs
+  const githubPagesUrls = [
+    'https://riep31.github.io/UtilisasiTes/dashboard.html',
+    '/UtilisasiTes/dashboard.html',
+    './dashboard.html',
+    '../dashboard.html'
+  ];
+  
+  console.log('Trying dashboard URLs:', githubPagesUrls);
+  return githubPagesUrls[0];
+}
+
+// Navigation function - Fixed to be properly global
+function goBackToDashboard() {
+  console.log('Going back to dashboard...');
+  
+  try {
+    // Method 1: Use referrer if available and valid
+    if (document.referrer && 
+        document.referrer !== window.location.href && 
+        document.referrer.includes('dashboard.html')) {
+      console.log('Using referrer method');
+      window.location.href = document.referrer;
+      return;
+    }
+    
+    // Method 2: Use browser history if available
+    if (window.history.length > 1) {
+      console.log('Using history back method');
+      window.history.back();
+      return;
+    }
+    
+    // Method 3: Navigate to specific dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    console.log('Using direct navigation to:', dashboardUrl);
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 4: Fallback options
+      console.log('Using fallback method');
+      if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+      }
+    }
+  } catch (error) {
+    console.error('Error in goBackToDashboard:', error);
+    // Final fallback
+    if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+    }
+  }
+}
+
+// Update page title and breadcrumb based on referrer or URL params
+function updateNavigationContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+  
+  if (returnUrl || document.referrer) {
+    const breadcrumb = document.getElementById('breadcrumb');
+    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Finish Goods`;
+  }
+}
+
 // Google Sheets API function to fetch data
 async function fetchSheetData(sheetNameParam) {
   if (!apiKey || !spreadsheetId) {
@@ -331,3 +445,193 @@ async function fetchSheetData(sheetNameParam) {
     const errorData = await response.json();
     throw new Error(`Google Sheets API Error: ${errorData.error?.message || response.statusText}`);
   }
+  
+  const data = await response.json();
+  return data.values || [];
+}
+
+// Function to calculate subtotals
+function calculateSubtotals(rows) {
+  if (rows.length <= 1) return { subtotalL: 0, subtotalP: 0, subtotalM: 0, subtotalQ: 0 };
+  
+  let subtotalL = 0, subtotalP = 0, subtotalM = 0, subtotalQ = 0;
+  
+  rows.slice(1).forEach(row => {
+    const valueL = parseFloat(row[11]) || 0; // Column L
+    if (!isNaN(valueL)) subtotalL += valueL;
+    
+    const valueP = parseFloat(row[15]) || 0; // Column P
+    if (!isNaN(valueP)) subtotalP += valueP;
+    
+    const valueM = parseFloat(row[12]) || 0; // Column M
+    if (!isNaN(valueM)) subtotalM += valueM;
+    
+    const valueQ = parseFloat(row[16]) || 0; // Column Q
+    if (!isNaN(valueQ)) subtotalQ += valueQ;
+  });
+  
+  return { subtotalL, subtotalP, subtotalM, subtotalQ };
+}
+
+// Function to update subtotals display
+function updateSubtotals(rows) {
+  const subtotals = calculateSubtotals(rows);
+  
+  document.getElementById('subtotalL').textContent = subtotals.subtotalL.toLocaleString('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+  
+  document.getElementById('subtotalP').textContent = subtotals.subtotalP.toLocaleString('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+  
+  document.getElementById('subtotalM').textContent = subtotals.subtotalM.toLocaleString('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+  
+  document.getElementById('subtotalQ').textContent = subtotals.subtotalQ.toLocaleString('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+}
+
+async function loadSheet(){
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+    setStatus("disconnected", "API Key belum dikonfigurasi");
+    return;
+  }
+  
+  setStatus("loading","Loading...");
+  try{
+    const mainSheetData = await fetchSheetData(sheetName);
+    allRows = mainSheetData;
+    renderTable(allRows);
+    fillFilter(allRows);
+    updateSubtotals(allRows);
+    setStatus("connected","Connected");
+  } catch(error) {
+    console.error('Error loading sheet:', error);
+    setStatus("disconnected","Error: " + error.message);
+  }
+}
+
+function renderTable(rows){
+  let thead=document.querySelector("#sheetTable thead");
+  let tbody=document.querySelector("#sheetTable tbody");
+  thead.innerHTML=""; 
+  tbody.innerHTML="";
+  
+  if(rows.length === 0) return;
+  
+  let header=document.createElement("tr");
+  rows[0].forEach((h,i)=>{
+    let th=document.createElement("th"); 
+    th.textContent=h;
+    th.onclick=()=>sortTable(i);
+    if(currentSort.index===i) th.classList.add(currentSort.asc?"sorted-asc":"sorted-desc");
+    header.appendChild(th);
+  }); 
+  thead.appendChild(header);
+
+  rows.slice(1).forEach((r,index)=>{
+    let tr=document.createElement("tr");
+    r.forEach((c,i)=>{
+      let td=document.createElement("td"); 
+      td.textContent=c;
+      tr.appendChild(td);
+    });
+    
+    // Add click functionality to highlight selected row
+    tr.onclick = () => {
+      document.querySelectorAll("#sheetTable tbody tr").forEach(row => row.classList.remove("selected"));
+      tr.classList.add("selected");
+    };
+    
+    tbody.appendChild(tr);
+  });
+  
+  updateSubtotals(rows);
+}
+
+function sortTable(i){
+  let rows=[...allRows]; 
+  if(i===currentSort.index) currentSort.asc=!currentSort.asc; 
+  else currentSort={index:i,asc:true};
+  let header=rows.shift();
+  rows.sort((a,b)=>{
+    let va=a[i],vb=b[i]; 
+    let na=parseFloat(va), nb=parseFloat(vb);
+    if(!isNaN(na)&&!isNaN(nb)) return currentSort.asc?na-nb:nb-na;
+    return currentSort.asc?va.localeCompare(vb):vb.localeCompare(va);
+  });
+  let sortedRows = [header,...rows];
+  renderTable(sortedRows);
+  updateSubtotals(sortedRows);
+}
+
+function applyFilters(){
+  let search=document.getElementById("searchBox").value.toLowerCase();
+  let fC=document.getElementById("filterC").value;
+  let filtered=allRows.filter((r,i)=>{
+    if(i===0)return true;
+    let s=r.some(c=>c.toLowerCase().includes(search));
+    let mC=!fC||r[1]===fC;
+    return s && mC;
+  });
+  renderTable(filtered);
+  updateSubtotals(filtered);
+}
+
+function fillFilter(rows){
+  let sc=document.getElementById("filterC");
+  sc.innerHTML="<option value=''>-- Filter --</option>";
+  let vals=[...new Set(rows.slice(1).map(r=>r[1]))];
+  vals.forEach(v=>{
+    if(v){
+      let o=document.createElement("option");
+      o.value=v;
+      o.textContent=v;
+      sc.appendChild(o);
+    }
+  });
+}
+
+function exportTable(){ 
+  let csv=Papa.unparse(allRows); 
+  let blob=new Blob([csv],{type:"text/csv"}); 
+  let url=URL.createObjectURL(blob); 
+  let a=document.createElement("a"); 
+  a.href=url; 
+  a.download="finish_goods_data.csv"; 
+  a.click(); 
+  URL.revokeObjectURL(url);
+}
+
+function printTable(){ 
+  window.print(); 
+}
+
+function setStatus(st,t){ 
+  let span=document.querySelector("#status span"); 
+  span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; 
+  document.getElementById("statusText").textContent=t; 
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
+
+// Make functions globally accessible
+window.goBackToDashboard = goBackToDashboard;
+window.loadSheet = loadSheet;
+window.applyFilters = applyFilters;
+window.exportTable = exportTable;
+window.printTable = printTable;
+</script>
+</body>
+</html>
