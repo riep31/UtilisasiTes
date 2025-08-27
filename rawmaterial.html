@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Raw Material & Packaging</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { 
       font-family:'Segoe UI',Tahoma,sans-serif; 
@@ -16,7 +17,7 @@
       display:flex; 
       align-items:center; 
       justify-content:space-between;
-      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
+      background:#ffffff; 
       padding:15px 20px; 
       color:#2c3e50; 
       box-shadow:0 2px 5px rgba(0,0,0,0.1);
@@ -30,8 +31,8 @@
     }
     
     .logo img { 
-      width:100px; 
-      height:50px; 
+      width:70px; 
+      height:40px; 
       margin-right:15px; 
       border-radius:8px; 
     }
@@ -79,6 +80,7 @@
     .export{background:#27ae60;} 
     .print{background:#2980b9;} 
     .refresh{background:#f39c12;}
+    .back{background:#8e44ad;} /* Purple color for back button */
     
     .status { 
       display:flex; 
@@ -98,6 +100,56 @@
     .connected{background:#2ecc71;} 
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: #ffffff;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #7f8c8d;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* Chart section */
+    .charts { 
+      display:flex; 
+      flex-wrap:wrap; 
+      gap:20px; 
+      margin:0 20px 20px 20px; 
+    }
+    
+    .chart-card { 
+      background:white; 
+      border-radius:12px; 
+      padding:20px; 
+      flex:1; 
+      min-width:300px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1); 
+      text-align:center; 
+    }
+    
+    .chart-card h4 { 
+      margin-bottom:15px; 
+      font-size:16px; 
+      color:#2c3e50; 
+      font-weight:600;
+    }
+    
+    canvas { 
+      max-height:250px !important; 
+    }
 
     .filters{
       margin:0 20px 20px 20px;
@@ -173,6 +225,7 @@
     
     tr:nth-child(even){background:#f8f9fa;}
     tr:hover { background:#e3f2fd; }
+    tr.selected { background:#bbdefb !important; border-left: 4px solid #2196f3; }
     
     .totals{
       margin-top:15px;
@@ -224,8 +277,6 @@
       font-weight: bold;
     }
 
-
-
     /* Responsive */
     @media (max-width: 768px) {
       .filters {
@@ -240,9 +291,8 @@
         flex-wrap: wrap;
       }
       
-      .nav-links a {
-        display: block;
-        margin: 5px 0;
+      .logo-text strong {
+        font-size: 14px;
       }
     }
   </style>
@@ -259,6 +309,7 @@
         </div>
       </div>
       <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
         <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
         <button class="ctrl print" onclick="printTable()">🖨 Print</button>
         <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
@@ -267,6 +318,23 @@
         </div>
       </div>
     </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Raw Material & Packaging
+    </div>
+
+    <!-- Mini Charts -->
+    <div class="charts">
+      <div class="chart-card">
+        <h4>Stock Distribution by Category</h4>
+        <canvas id="stockChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Pcs vs Kgs/Roll/Meter/Ltr</h4>
+        <canvas id="unitsChart"></canvas>
+      </div>
+    </div>
 
     <!-- Filters -->
     <div class="filters">
@@ -301,6 +369,93 @@ let sheetName = 'LINKTOWEB3'; // Raw Material & Packaging sheet
 
 let allRows = [];
 let currentSort = { index: -1, asc: true };
+let stockChart, unitsChart;
+
+// Function to get dashboard URL from various sources
+function getDashboardUrl() {
+  console.log('Current URL:', window.location.href);
+  console.log('Current Path:', window.location.pathname);
+  console.log('Referrer:', document.referrer);
+  
+  // Try to get dashboard URL from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  if (returnUrl) {
+    console.log('Using return URL:', returnUrl);
+    return decodeURIComponent(returnUrl);
+  }
+  
+  // Try to get from document referrer
+  if (document.referrer && document.referrer !== window.location.href) {
+    console.log('Using referrer URL:', document.referrer);
+    return document.referrer;
+  }
+  
+  // For GitHub Pages - specific URLs
+  const githubPagesUrls = [
+    'https://riep31.github.io/UtilisasiTes/dashboard.html',
+    '/UtilisasiTes/dashboard.html',
+    './dashboard.html',
+    '../dashboard.html'
+  ];
+  
+  console.log('Trying dashboard URLs:', githubPagesUrls);
+  return githubPagesUrls[0];
+}
+
+// Navigation function - Fixed to be properly global
+function goBackToDashboard() {
+  console.log('Going back to dashboard...');
+  
+  try {
+    // Method 1: Use referrer if available and valid
+    if (document.referrer && 
+        document.referrer !== window.location.href && 
+        document.referrer.includes('dashboard.html')) {
+      console.log('Using referrer method');
+      window.location.href = document.referrer;
+      return;
+    }
+    
+    // Method 2: Use browser history if available
+    if (window.history.length > 1) {
+      console.log('Using history back method');
+      window.history.back();
+      return;
+    }
+    
+    // Method 3: Navigate to specific dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    console.log('Using direct navigation to:', dashboardUrl);
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 4: Fallback options
+      console.log('Using fallback method');
+      if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+      }
+    }
+  } catch (error) {
+    console.error('Error in goBackToDashboard:', error);
+    // Final fallback
+    if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+    }
+  }
+}
+
+// Update page title and breadcrumb based on referrer or URL params
+function updateNavigationContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+  
+  if (returnUrl || document.referrer) {
+    const breadcrumb = document.getElementById('breadcrumb');
+    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Raw Material & Packaging`;
+  }
+}
 
 // Google Sheets API function to fetch data
 async function fetchSheetData(sheetNameParam) {
@@ -367,6 +522,7 @@ async function loadSheet(){
     renderTable(allRows);
     fillFilter(allRows);
     updateSubtotals(allRows);
+    updateCharts(allRows);
     setStatus("connected","Connected");
   } catch(error) {
     console.error('Error loading sheet:', error);
@@ -392,13 +548,23 @@ function renderTable(rows){
   }); 
   thead.appendChild(header);
 
-  rows.slice(1).forEach(r=>{
+  rows.slice(1).forEach((r,index)=>{
     let tr=document.createElement("tr");
     r.forEach((c,i)=>{
       let td=document.createElement("td"); 
       td.textContent=c;
       tr.appendChild(td);
     });
+    
+    // Add click functionality to highlight selected row
+    tr.onclick = () => {
+      document.querySelectorAll("#sheetTable tbody tr").forEach(row => row.classList.remove("selected"));
+      tr.classList.add("selected");
+      
+      // Update charts with selected row data
+      updateCharts([rows[0], r]);
+    };
+    
     tbody.appendChild(tr);
   });
   
@@ -432,6 +598,7 @@ function applyFilters(){
   });
   renderTable(filtered);
   updateSubtotals(filtered);
+  updateCharts(filtered);
 }
 
 function fillFilter(rows){
@@ -444,6 +611,84 @@ function fillFilter(rows){
       o.value=v;
       o.textContent=v;
       sc.appendChild(o);
+    }
+  });
+}
+
+// Chart functions
+function updateCharts(rows) {
+  if(rows.length < 2) return;
+  
+  // Stock Distribution by Category (assuming column B contains categories)
+  let categories = {};
+  let pcsData = [];
+  let kgsData = [];
+  
+  rows.slice(1).forEach(r => {
+    let category = r[1] || 'Unknown'; // Column B
+    let pcs = parseFloat(r[7]) || 0; // Column H - Pcs
+    let kgs = parseFloat(r[8]) || 0; // Column I - Kgs/Roll/Meter/Ltr
+    
+    if (!categories[category]) {
+      categories[category] = { pcs: 0, kgs: 0 };
+    }
+    categories[category].pcs += pcs;
+    categories[category].kgs += kgs;
+  });
+  
+  let labels = Object.keys(categories);
+  pcsData = labels.map(label => categories[label].pcs);
+  kgsData = labels.map(label => categories[label].kgs);
+  
+  // Update Stock Distribution Chart
+  if(stockChart) stockChart.destroy();
+  stockChart = new Chart(document.getElementById("stockChart"), {
+    type: "bar",
+    data: { 
+      labels, 
+      datasets: [
+        { label: "Pcs", data: pcsData, backgroundColor: "#3498db" },
+        { label: "Kgs/Roll/Meter/Ltr", data: kgsData, backgroundColor: "#e74c3c" }
+      ]
+    },
+    options: { 
+      responsive: true, 
+      plugins: {legend: {position: "bottom"}},
+      scales: {
+        x: { display: true },
+        y: { display: true, beginAtZero: true }
+      }
+    }
+  });
+  
+  // Update Units Distribution Chart
+  let totalPcs = pcsData.reduce((a,b) => a+b, 0);
+  let totalKgs = kgsData.reduce((a,b) => a+b, 0);
+  
+  if(unitsChart) unitsChart.destroy();
+  unitsChart = new Chart(document.getElementById("unitsChart"), {
+    type: "doughnut",
+    data: { 
+      labels: ["Total Pcs", "Total Kgs/Roll/Meter/Ltr"], 
+      datasets: [{ 
+        data: [totalPcs, totalKgs], 
+        backgroundColor: ["#27ae60","#f39c12"] 
+      }] 
+    },
+    options: { 
+      responsive: true, 
+      plugins: {
+        legend: {position: "bottom"},
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let total = totalPcs + totalKgs;
+              let percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : 0;
+              return context.label + ': ' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
     }
   });
 }
@@ -469,8 +714,18 @@ function setStatus(st,t){
   document.getElementById("statusText").textContent=t; 
 }
 
-// Auto-load data when page loads
-loadSheet();
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
+
+// Make functions globally accessible
+window.goBackToDashboard = goBackToDashboard;
+window.loadSheet = loadSheet;
+window.applyFilters = applyFilters;
+window.exportTable = exportTable;
+window.printTable = printTable;
 </script>
 </body>
 </html>
