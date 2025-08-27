@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Data Kapasitas Gudang</title>
+  <title>Data Kapasitas Gudang - Utilisasi Warehouse Yogya</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -17,6 +17,7 @@
       align-items:center; 
       justify-content:space-between;
       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
+      padding:15px 20px; 
       padding:15px 20px; 
       color:#2c3e50; 
       box-shadow:0 2px 5px rgba(0,0,0,0.1);
@@ -310,48 +311,71 @@ let capacityChart, rackingChart;
 
 // Navigation function to go back to dashboard
 function goBackToDashboard() {
-  // Method 1: Go back in browser history
+  console.log('Going back to dashboard...');
+  
+  // Method 1: Use referrer if available and valid
+  if (document.referrer && 
+      document.referrer !== window.location.href && 
+      document.referrer.includes('dashboard.html')) {
+    console.log('Using referrer method');
+    window.location.href = document.referrer;
+    return;
+  }
+  
+  // Method 2: Use browser history if available
   if (window.history.length > 1) {
+    console.log('Using history back method');
     window.history.back();
+    return;
+  }
+  
+  // Method 3: Navigate to specific dashboard URL
+  const dashboardUrl = getDashboardUrl();
+  console.log('Using direct navigation to:', dashboardUrl);
+  if (dashboardUrl) {
+    window.location.href = dashboardUrl;
   } else {
-    // Method 2: Navigate to a specific dashboard URL
-    // Replace this with your actual dashboard URL
-    const dashboardUrl = getDashboardUrl();
-    if (dashboardUrl) {
-      window.location.href = dashboardUrl;
-    } else {
-      // Method 3: Close current tab if opened from dashboard
-      if (window.opener) {
-        window.close();
-      } else {
-        alert('Silakan kembali ke dashboard melalui browser back button atau tutup tab ini.');
-      }
+    // Method 4: Fallback options
+    console.log('Using fallback method');
+    if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
     }
   }
 }
 
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
+  // Debug info
+  console.log('Current URL:', window.location.href);
+  console.log('Current Path:', window.location.pathname);
+  console.log('Referrer:', document.referrer);
+  
   // Try to get dashboard URL from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const returnUrl = urlParams.get('return');
   if (returnUrl) {
+    console.log('Using return URL:', returnUrl);
     return decodeURIComponent(returnUrl);
   }
   
   // Try to get from document referrer
   if (document.referrer && document.referrer !== window.location.href) {
+    console.log('Using referrer URL:', document.referrer);
     return document.referrer;
   }
   
-  // Default dashboard URLs (customize based on your setup)
-  const possibleDashboards = [
-  '/UtilisasiTes/dashboard.html',  // ✅ Ini yang benar untuk GitHub Pages
-  '/dashboard.html'
-];
+  // For GitHub Pages - specific URLs
+  const githubPagesUrls = [
+    'https://riep31.github.io/UtilisasiTes/dashboard.html',  // Full URL - most reliable
+    '/UtilisasiTes/dashboard.html',                          // Absolute path
+    './dashboard.html',                                       // Relative path (same folder)
+    '../dashboard.html'                                       // Parent folder
+  ];
   
-  // Return the first available option (you can add logic to check which exists)
-  return possibleDashboards[0];
+  console.log('Trying dashboard URLs:', githubPagesUrls);
+  
+  // Return the full URL for GitHub Pages
+  return githubPagesUrls[0];
 }
 
 // Update page title and breadcrumb based on referrer or URL params
