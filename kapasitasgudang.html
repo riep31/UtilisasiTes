@@ -12,7 +12,6 @@
       background:#eef2f7; 
       min-height:100vh;
     }
-
     header {
       display:flex; 
       align-items:center; 
@@ -80,6 +79,7 @@
     .export{background:#27ae60;} 
     .print{background:#2980b9;} 
     .refresh{background:#f39c12;}
+    .back{background:#8e44ad;} /* Purple color for back button */
     
     .status { 
       display:flex; 
@@ -99,7 +99,6 @@
     .connected{background:#2ecc71;} 
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
-
     .filters{
       margin:0 20px 20px 20px;
       display:flex;
@@ -132,7 +131,28 @@
       font-size:14px;
       min-width:150px;
     }
-
+    
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: #ffffff;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #7f8c8d;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    
     /* Tabel */
     .table-container{
       margin:0 20px 20px 20px;
@@ -183,9 +203,6 @@
       text-align:right;
       color:#2c3e50;
     }
-
-
-
     /* Responsive */
     @media (max-width: 768px) {
       .filters {
@@ -204,7 +221,6 @@
         font-size: 14px;
       }
     }
-
     /* Chart section */
     .charts { 
       display:flex; 
@@ -247,6 +263,7 @@
         </div>
       </div>
       <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
         <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
         <button class="ctrl print" onclick="printTable()">🖨 Print</button>
         <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
@@ -255,7 +272,12 @@
         </div>
       </div>
     </header>
-
+    
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Data Kapasitas Gudang
+    </div>
+    
     <!-- Mini Charts -->
     <div class="charts">
       <div class="chart-card">
@@ -267,28 +289,83 @@
         <canvas id="rackingChart"></canvas>
       </div>
     </div>
-
     <!-- Filters -->
     <div class="filters">
       <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
       <select id="filterC" onchange="applyFilters()"><option value="">-- Filter --</option></select>
     </div>
-
     <!-- Main Table -->
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
     </div>
   </div>
-
 <script>
 // Google Sheets API Configuration
 let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis';
 let spreadsheetId = '1AwPzVONLkr-GXigtHBGPPXE8XwZdwPXw69g7XSp5FdY';
 let sheetName = 'LINKTOWEB2'; // Capacity Data sheet
-
 let allRows = [];
 let currentSort = { index: -1, asc: true };
 let capacityChart, rackingChart;
+
+// Navigation function to go back to dashboard
+function goBackToDashboard() {
+  // Method 1: Go back in browser history
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    // Method 2: Navigate to a specific dashboard URL
+    // Replace this with your actual dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 3: Close current tab if opened from dashboard
+      if (window.opener) {
+        window.close();
+      } else {
+        alert('Silakan kembali ke dashboard melalui browser back button atau tutup tab ini.');
+      }
+    }
+  }
+}
+
+// Function to get dashboard URL from various sources
+function getDashboardUrl() {
+  // Try to get dashboard URL from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  if (returnUrl) {
+    return decodeURIComponent(returnUrl);
+  }
+  
+  // Try to get from document referrer
+  if (document.referrer && document.referrer !== window.location.href) {
+    return document.referrer;
+  }
+  
+  // Default dashboard URLs (customize based on your setup)
+  const possibleDashboards = [
+    
+    'dashboard.html',
+    '/'
+  ];
+  
+  // Return the first available option (you can add logic to check which exists)
+  return possibleDashboards[0];
+}
+
+// Update page title and breadcrumb based on referrer or URL params
+function updateNavigationContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+  
+  if (returnUrl || document.referrer) {
+    const breadcrumb = document.getElementById('breadcrumb');
+    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Data Kapasitas Gudang`;
+  }
+}
 
 // Google Sheets API function to fetch data
 async function fetchSheetData(sheetNameParam) {
@@ -309,7 +386,6 @@ async function fetchSheetData(sheetNameParam) {
   const data = await response.json();
   return data.values || [];
 }
-
 async function loadSheet(){
   if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
     setStatus("disconnected", "API Key belum dikonfigurasi");
@@ -329,7 +405,6 @@ async function loadSheet(){
     setStatus("disconnected","Error: " + error.message);
   }
 }
-
 function renderTable(rows){
   let thead=document.querySelector("#sheetTable thead");
   let tbody=document.querySelector("#sheetTable tbody");
@@ -347,7 +422,6 @@ function renderTable(rows){
     header.appendChild(th);
   }); 
   thead.appendChild(header);
-
   rows.slice(1).forEach((r,index)=>{
     let tr=document.createElement("tr");
     r.forEach((c,i)=>{
@@ -369,7 +443,6 @@ function renderTable(rows){
     tbody.appendChild(tr);
   });
 }
-
 function sortTable(i){
   let rows=[...allRows]; 
   if(i===currentSort.index) currentSort.asc=!currentSort.asc; 
@@ -384,7 +457,6 @@ function sortTable(i){
   let sortedRows = [header,...rows];
   renderTable(sortedRows);
 }
-
 function applyFilters(){
   let search=document.getElementById("searchBox").value.toLowerCase();
   let fC=document.getElementById("filterC").value;
@@ -397,7 +469,6 @@ function applyFilters(){
   renderTable(filtered);
   updateCharts(filtered);
 }
-
 function fillFilter(rows){
   let sc=document.getElementById("filterC");
   sc.innerHTML="<option value=''>-- Filter --</option>";
@@ -411,7 +482,6 @@ function fillFilter(rows){
     }
   });
 }
-
 function exportTable(){ 
   let csv=Papa.unparse(allRows); 
   let blob=new Blob([csv],{type:"text/csv"}); 
@@ -422,16 +492,20 @@ function exportTable(){
   a.click(); 
   URL.revokeObjectURL(url);
 }
-
 function printTable(){ 
   window.print(); 
 }
-
 function setStatus(st,t){ 
   let span=document.querySelector("#status span"); 
   span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; 
   document.getElementById("statusText").textContent=t; 
 }
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
 
 // Auto-load data when page loads
 loadSheet();
@@ -444,7 +518,6 @@ function updateCharts(rows){
   let stockedIdx = headers.indexOf("Stocked Racking Percent");
   let emptyIdx = headers.indexOf("Empty Racking Percent");
   if(locIdx<0||stockedIdx<0||emptyIdx<0) return;
-
   let labels = [];
   let stocked = [];
   let empty = [];
@@ -453,7 +526,6 @@ function updateCharts(rows){
     stocked.push(parseFloat(r[stockedIdx]||0));
     empty.push(parseFloat(r[emptyIdx]||0));
   });
-
   if(capacityChart) capacityChart.destroy();
   capacityChart = new Chart(document.getElementById("capacityChart"), {
     type:"bar",
@@ -463,10 +535,8 @@ function updateCharts(rows){
     ]},
     options:{ responsive:true, plugins:{legend:{position:"bottom"}}, scales:{x:{stacked:true},y:{stacked:true,max:100}} }
   });
-
   updateRackingChart();
 }
-
 function updateRackingChart(selectedRow = null){
   if(allRows.length < 2) return;
   
@@ -488,7 +558,6 @@ function updateRackingChart(selectedRow = null){
       emptyData.push(emptyVal);
     });
   }
-
   // Calculate total values
   let totalStocked = stockedData.reduce((a,b)=>a+b,0);
   let totalEmpty = emptyData.reduce((a,b)=>a+b,0);
@@ -520,6 +589,3 @@ function updateRackingChart(selectedRow = null){
     }
   });
 }
-</script>
-</body>
-</html>
