@@ -299,6 +299,7 @@
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
     </div>
   </div>
+
 <script>
 // Google Sheets API Configuration
 let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis';
@@ -308,43 +309,8 @@ let allRows = [];
 let currentSort = { index: -1, asc: true };
 let capacityChart, rackingChart;
 
-// Navigation function to go back to dashboard - Make it globally available
-window.goBackToDashboard = function() {
-  console.log('Going back to dashboard...');
-  
-  // Method 1: Use referrer if available and valid
-  if (document.referrer && 
-      document.referrer !== window.location.href && 
-      document.referrer.includes('dashboard.html')) {
-    console.log('Using referrer method');
-    window.location.href = document.referrer;
-    return;
-  }
-  
-  // Method 2: Use browser history if available
-  if (window.history.length > 1) {
-    console.log('Using history back method');
-    window.history.back();
-    return;
-  }
-  
-  // Method 3: Navigate to specific dashboard URL
-  const dashboardUrl = getDashboardUrl();
-  console.log('Using direct navigation to:', dashboardUrl);
-  if (dashboardUrl) {
-    window.location.href = dashboardUrl;
-  } else {
-    // Method 4: Fallback options
-    console.log('Using fallback method');
-    if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
-      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
-    }
-  }
-}
-
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
-  // Debug info
   console.log('Current URL:', window.location.href);
   console.log('Current Path:', window.location.pathname);
   console.log('Referrer:', document.referrer);
@@ -365,16 +331,56 @@ function getDashboardUrl() {
   
   // For GitHub Pages - specific URLs
   const githubPagesUrls = [
-    'https://riep31.github.io/UtilisasiTes/dashboard.html',  // Full URL - most reliable
-    '/UtilisasiTes/dashboard.html',                          // Absolute path
-    './dashboard.html',                                       // Relative path (same folder)
-    '../dashboard.html'                                       // Parent folder
+    'https://riep31.github.io/UtilisasiTes/dashboard.html',
+    '/UtilisasiTes/dashboard.html',
+    './dashboard.html',
+    '../dashboard.html'
   ];
   
   console.log('Trying dashboard URLs:', githubPagesUrls);
-  
-  // Return the full URL for GitHub Pages
   return githubPagesUrls[0];
+}
+
+// Navigation function - Fixed to be properly global
+function goBackToDashboard() {
+  console.log('Going back to dashboard...');
+  
+  try {
+    // Method 1: Use referrer if available and valid
+    if (document.referrer && 
+        document.referrer !== window.location.href && 
+        document.referrer.includes('dashboard.html')) {
+      console.log('Using referrer method');
+      window.location.href = document.referrer;
+      return;
+    }
+    
+    // Method 2: Use browser history if available
+    if (window.history.length > 1) {
+      console.log('Using history back method');
+      window.history.back();
+      return;
+    }
+    
+    // Method 3: Navigate to specific dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    console.log('Using direct navigation to:', dashboardUrl);
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 4: Fallback options
+      console.log('Using fallback method');
+      if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+      }
+    }
+  } catch (error) {
+    console.error('Error in goBackToDashboard:', error);
+    // Final fallback
+    if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+    }
+  }
 }
 
 // Update page title and breadcrumb based on referrer or URL params
@@ -408,52 +414,59 @@ async function fetchSheetData(sheetNameParam) {
   const data = await response.json();
   return data.values || [];
 }
-window.loadSheet = async function(){
+
+// Load sheet function
+function loadSheet() {
   if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
     setStatus("disconnected", "API Key belum dikonfigurasi");
     return;
   }
   
   setStatus("loading","Loading...");
-  try{
-    const mainSheetData = await fetchSheetData(sheetName);
-    allRows = mainSheetData;
-    renderTable(allRows);
-    fillFilter(allRows);
-    updateCharts(allRows);
-    setStatus("connected","Connected");
-  } catch(error) {
-    console.error('Error loading sheet:', error);
-    setStatus("disconnected","Error: " + error.message);
-  }
+  
+  fetchSheetData(sheetName)
+    .then(mainSheetData => {
+      allRows = mainSheetData;
+      renderTable(allRows);
+      fillFilter(allRows);
+      updateCharts(allRows);
+      setStatus("connected","Connected");
+    })
+    .catch(error => {
+      console.error('Error loading sheet:', error);
+      setStatus("disconnected","Error: " + error.message);
+    });
 }
+
+// Render table function
 function renderTable(rows){
-  let thead=document.querySelector("#sheetTable thead");
-  let tbody=document.querySelector("#sheetTable tbody");
-  thead.innerHTML=""; 
-  tbody.innerHTML="";
+  let thead = document.querySelector("#sheetTable thead");
+  let tbody = document.querySelector("#sheetTable tbody");
+  thead.innerHTML = ""; 
+  tbody.innerHTML = "";
   
   if(rows.length === 0) return;
   
-  let header=document.createElement("tr");
-  rows[0].forEach((h,i)=>{
-    let th=document.createElement("th"); 
-    th.textContent=h;
-    th.onclick=()=>sortTable(i);
-    if(currentSort.index===i) th.classList.add(currentSort.asc?"sorted-asc":"sorted-desc");
+  let header = document.createElement("tr");
+  rows[0].forEach((h,i) => {
+    let th = document.createElement("th"); 
+    th.textContent = h;
+    th.onclick = () => sortTable(i);
+    if(currentSort.index === i) th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
     header.appendChild(th);
   }); 
   thead.appendChild(header);
-  rows.slice(1).forEach((r,index)=>{
-    let tr=document.createElement("tr");
-    r.forEach((c,i)=>{
-      let td=document.createElement("td"); 
-      td.textContent=c;
+  
+  rows.slice(1).forEach((r,index) => {
+    let tr = document.createElement("tr");
+    r.forEach((c,i) => {
+      let td = document.createElement("td"); 
+      td.textContent = c;
       tr.appendChild(td);
     });
     
     // Add click functionality to highlight selected row
-    tr.onclick=()=>{
+    tr.onclick = () => {
       document.querySelectorAll("#sheetTable tbody tr").forEach(row => row.classList.remove("selected"));
       tr.classList.add("selected");
       
@@ -465,73 +478,75 @@ function renderTable(rows){
     tbody.appendChild(tr);
   });
 }
+
+// Sort table function
 function sortTable(i){
-  let rows=[...allRows]; 
-  if(i===currentSort.index) currentSort.asc=!currentSort.asc; 
-  else currentSort={index:i,asc:true};
-  let header=rows.shift();
-  rows.sort((a,b)=>{
-    let va=a[i],vb=b[i]; 
-    let na=parseFloat(va), nb=parseFloat(vb);
-    if(!isNaN(na)&&!isNaN(nb)) return currentSort.asc?na-nb:nb-na;
-    return currentSort.asc?va.localeCompare(vb):vb.localeCompare(va);
+  let rows = [...allRows]; 
+  if(i === currentSort.index) currentSort.asc = !currentSort.asc; 
+  else currentSort = {index: i, asc: true};
+  let header = rows.shift();
+  rows.sort((a,b) => {
+    let va = a[i], vb = b[i]; 
+    let na = parseFloat(va), nb = parseFloat(vb);
+    if(!isNaN(na) && !isNaN(nb)) return currentSort.asc ? na-nb : nb-na;
+    return currentSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
   });
-  let sortedRows = [header,...rows];
+  let sortedRows = [header, ...rows];
   renderTable(sortedRows);
 }
-window.applyFilters = function(){
-  let search=document.getElementById("searchBox").value.toLowerCase();
-  let fC=document.getElementById("filterC").value;
-  let filtered=allRows.filter((r,i)=>{
-    if(i===0)return true;
-    let s=r.some(c=>c.toLowerCase().includes(search));
-    let mC=!fC||r[1]===fC;
+
+// Apply filters function
+function applyFilters(){
+  let search = document.getElementById("searchBox").value.toLowerCase();
+  let fC = document.getElementById("filterC").value;
+  let filtered = allRows.filter((r,i) => {
+    if(i === 0) return true;
+    let s = r.some(c => c.toLowerCase().includes(search));
+    let mC = !fC || r[1] === fC;
     return s && mC;
   });
   renderTable(filtered);
   updateCharts(filtered);
 }
+
+// Fill filter function
 function fillFilter(rows){
-  let sc=document.getElementById("filterC");
-  sc.innerHTML="<option value=''>-- Filter --</option>";
-  let vals=[...new Set(rows.slice(1).map(r=>r[1]))];
-  vals.forEach(v=>{
+  let sc = document.getElementById("filterC");
+  sc.innerHTML = "<option value=''>-- Filter --</option>";
+  let vals = [...new Set(rows.slice(1).map(r => r[1]))];
+  vals.forEach(v => {
     if(v){
-      let o=document.createElement("option");
-      o.value=v;
-      o.textContent=v;
+      let o = document.createElement("option");
+      o.value = v;
+      o.textContent = v;
       sc.appendChild(o);
     }
   });
 }
-// Make all onclick functions globally available
-window.exportTable = function() { 
-  let csv=Papa.unparse(allRows); 
-  let blob=new Blob([csv],{type:"text/csv"}); 
-  let url=URL.createObjectURL(blob); 
-  let a=document.createElement("a"); 
-  a.href=url; 
-  a.download="capacity_data.csv"; 
+
+// Export table function
+function exportTable() { 
+  let csv = Papa.unparse(allRows); 
+  let blob = new Blob([csv], {type: "text/csv"}); 
+  let url = URL.createObjectURL(blob); 
+  let a = document.createElement("a"); 
+  a.href = url; 
+  a.download = "capacity_data.csv"; 
   a.click(); 
   URL.revokeObjectURL(url);
 }
 
-window.printTable = function() { 
+// Print table function
+function printTable() { 
   window.print(); 
 }
 
-
-function setStatus(st,t){ 
-  let span=document.querySelector("#status span"); 
-  span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; 
-  document.getElementById("statusText").textContent=t; 
+// Set status function
+function setStatus(st, t){ 
+  let span = document.querySelector("#status span"); 
+  span.className = st === "connected" ? "connected" : st === "loading" ? "loading" : "disconnected"; 
+  document.getElementById("statusText").textContent = t; 
 }
-
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-  updateNavigationContext();
-  window.loadSheet();
-});
 
 // Chart functions
 function updateCharts(rows){
@@ -540,26 +555,37 @@ function updateCharts(rows){
   let locIdx = headers.indexOf("Warehouse Location");
   let stockedIdx = headers.indexOf("Stocked Racking Percent");
   let emptyIdx = headers.indexOf("Empty Racking Percent");
-  if(locIdx<0||stockedIdx<0||emptyIdx<0) return;
+  if(locIdx < 0 || stockedIdx < 0 || emptyIdx < 0) return;
+  
   let labels = [];
   let stocked = [];
   let empty = [];
-  rows.slice(1).forEach(r=>{
+  
+  rows.slice(1).forEach(r => {
     labels.push(r[locIdx]);
-    stocked.push(parseFloat(r[stockedIdx]||0));
-    empty.push(parseFloat(r[emptyIdx]||0));
+    stocked.push(parseFloat(r[stockedIdx] || 0));
+    empty.push(parseFloat(r[emptyIdx] || 0));
   });
+  
   if(capacityChart) capacityChart.destroy();
   capacityChart = new Chart(document.getElementById("capacityChart"), {
-    type:"bar",
-    data:{ labels, datasets:[
-      { label:"Stocked %", data:stocked, backgroundColor:"#3498db" },
-      { label:"Empty %", data:empty, backgroundColor:"#95a5a6" }
-    ]},
-    options:{ responsive:true, plugins:{legend:{position:"bottom"}}, scales:{x:{stacked:true},y:{stacked:true,max:100}} }
+    type: "bar",
+    data: { 
+      labels, 
+      datasets: [
+        { label: "Stocked %", data: stocked, backgroundColor: "#3498db" },
+        { label: "Empty %", data: empty, backgroundColor: "#95a5a6" }
+      ]
+    },
+    options: { 
+      responsive: true, 
+      plugins: {legend: {position: "bottom"}}, 
+      scales: {x: {stacked: true}, y: {stacked: true, max: 100}} 
+    }
   });
   updateRackingChart();
 }
+
 function updateRackingChart(selectedRow = null){
   if(allRows.length < 2) return;
   
@@ -568,37 +594,38 @@ function updateRackingChart(selectedRow = null){
   
   if(selectedRow) {
     // Use data from selected row only
-    let stockedVal = parseFloat(selectedRow[2]||0); // Column C - Stocked values
-    let emptyVal = parseFloat(selectedRow[3]||0);   // Column D - Empty values
+    let stockedVal = parseFloat(selectedRow[2] || 0); // Column C - Stocked values
+    let emptyVal = parseFloat(selectedRow[3] || 0);   // Column D - Empty values
     stockedData.push(stockedVal);
     emptyData.push(emptyVal);
   } else {
     // Use data from all rows (default behavior)
-    allRows.slice(1).forEach(r=>{
-      let stockedVal = parseFloat(r[2]||0); // Column C - Stocked values
-      let emptyVal = parseFloat(r[3]||0);   // Column D - Empty values
+    allRows.slice(1).forEach(r => {
+      let stockedVal = parseFloat(r[2] || 0); // Column C - Stocked values
+      let emptyVal = parseFloat(r[3] || 0);   // Column D - Empty values
       stockedData.push(stockedVal);
       emptyData.push(emptyVal);
     });
   }
+  
   // Calculate total values
-  let totalStocked = stockedData.reduce((a,b)=>a+b,0);
-  let totalEmpty = emptyData.reduce((a,b)=>a+b,0);
+  let totalStocked = stockedData.reduce((a,b) => a+b, 0);
+  let totalEmpty = emptyData.reduce((a,b) => a+b, 0);
   
   if(rackingChart) rackingChart.destroy();
   rackingChart = new Chart(document.getElementById("rackingChart"), {
-    type:"doughnut",
-    data:{ 
-      labels:["Stocked","Empty"], 
-      datasets:[{ 
-        data:[totalStocked,totalEmpty], 
-        backgroundColor:["#27ae60","#e74c3c"] 
+    type: "doughnut",
+    data: { 
+      labels: ["Stocked","Empty"], 
+      datasets: [{ 
+        data: [totalStocked, totalEmpty], 
+        backgroundColor: ["#27ae60","#e74c3c"] 
       }] 
     },
-    options:{ 
-      responsive:true, 
-      plugins:{
-        legend:{position:"bottom"},
+    options: { 
+      responsive: true, 
+      plugins: {
+        legend: {position: "bottom"},
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -612,3 +639,19 @@ function updateRackingChart(selectedRow = null){
     }
   });
 }
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
+
+// Make functions globally accessible
+window.goBackToDashboard = goBackToDashboard;
+window.loadSheet = loadSheet;
+window.applyFilters = applyFilters;
+window.exportTable = exportTable;
+window.printTable = printTable;
+</script>
+</body>
+</html>
