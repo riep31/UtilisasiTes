@@ -232,6 +232,8 @@
       margin-left: 260px;
       min-height: 100vh;
       transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
 
     .main-content.collapsed {
@@ -239,7 +241,7 @@
     }
 
     .top-header {
-      background: white;
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
       padding: 20px 40px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       border-bottom: 1px solid #f1f5f9;
@@ -294,6 +296,25 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .greeting-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: white;
+    }
+
+    .greeting-icon {
+      font-size: 16px;
+    }
+
+    .greeting-text {
+      font-weight: 500;
     }
 
     .user-profile {
@@ -308,6 +329,8 @@
       font-weight: 500;
       border: 1px solid #e2e8f0;
       transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
     }
 
     .user-profile:hover {
@@ -328,8 +351,81 @@
       font-weight: 600;
     }
 
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .user-details {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.2;
+    }
+
+    /* Dropdown menu for user profile */
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      margin-top: 8px;
+    }
+
+    .user-profile:hover .user-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+      background: #f8fafc;
+      color: #1e293b;
+    }
+
+    .dropdown-item.logout {
+      color: #dc2626;
+    }
+
+    .dropdown-item.logout:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
     .content {
       padding: 40px;
+      flex: 1;
     }
 
     .welcome {
@@ -420,9 +516,9 @@
 
     footer {
       text-align: center;
-      padding: 30px 40px;
-      background: white;
-      margin-top: 60px;
+      padding: 30px 30px;
+      background: linear-gradient(90deg,  #2c3e50, #000);
+      margin-top: auto;
       color: #64748b;
       border-top: 1px solid #f1f5f9;
     }
@@ -581,6 +677,14 @@
       .sidebar {
         width: 100%;
       }
+
+      .user-info {
+        display: none;
+      }
+
+      .greeting-section {
+        font-size: 12px;
+      }
     }
 
     /* Overlay for mobile */
@@ -598,6 +702,57 @@
     .sidebar-overlay.active {
       display: block;
     }
+
+    /* Login prompt overlay */
+    .login-prompt-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .login-prompt {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-prompt h3 {
+      color: #1e293b;
+      margin-bottom: 16px;
+      font-size: 1.5rem;
+    }
+
+    .login-prompt p {
+      color: #64748b;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .login-redirect-btn {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .login-redirect-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -607,6 +762,15 @@
 
     <!-- Sidebar Overlay (Mobile) -->
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Login Prompt (shown if no user data) -->
+    <div class="login-prompt-overlay" id="loginPrompt" style="display: none;">
+      <div class="login-prompt">
+        <h3>Login Required</h3>
+        <p>Untuk menggunakan dashboard, silakan login terlebih dahulu.</p>
+        <button class="login-redirect-btn" onclick="redirectToLogin()">Login Sekarang</button>
+      </div>
+    </div>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -624,21 +788,21 @@
           <span class="nav-icon">🏠</span>
           <span class="nav-text">Dashboard</span>
         </a>
-        <a href="gudang/index.html" class="nav-item" data-tooltip="Gudang">
+        <a href="raw-material/index.html" class="nav-item" data-tooltip="Raw Material & Packaging">
           <span class="nav-icon">📦</span>
-          <span class="nav-text">Gudang</span>
+          <span class="nav-text">Raw Material & Packaging</span>
         </a>
-        <a href="pegawai/index.html" class="nav-item" data-tooltip="Pegawai">
+        <a href="finish-goods/index.html" class="nav-item" data-tooltip="Finish Goods">
           <span class="nav-icon">👨‍💼</span>
-          <span class="nav-text">Pegawai</span>
+          <span class="nav-text">Finish Goods</span>
         </a>
-        <a href="laporan/index.html" class="nav-item" data-tooltip="Laporan">
+        <a href="status-kapasitas/index.html" class="nav-item" data-tooltip="Status Kapasitas Gudang">
           <span class="nav-icon">📑</span>
-          <span class="nav-text">Laporan</span>
+          <span class="nav-text">Status Kapasitas Gudang</span>
         </a>
-        <a href="setting.html" class="nav-item" data-tooltip="Setting">
+        <a href="card-stock/index.html" class="nav-item" data-tooltip="Card Stock">
           <span class="nav-icon">⚙️</span>
-          <span class="nav-text">Setting</span>
+          <span class="nav-text">Card Stock</span>
         </a>
       </nav>
     </aside>
@@ -656,9 +820,30 @@
           </div>
         </div>
         <div class="header-actions">
-          <div class="user-profile">
-            <div class="user-avatar">AD</div>
-            <span>Admin</span>
+          <div class="greeting-section">
+            <span class="greeting-icon" id="greetingIcon">🌅</span>
+            <span class="greeting-text" id="greetingText">Selamat Pagi</span>
+          </div>
+          <div class="user-profile" id="userProfile">
+            <div class="user-avatar" id="userAvatar">AD</div>
+            <div class="user-info">
+              <div class="user-name" id="userName">Admin</div>
+              <div class="user-details">
+                <div id="userLevel">Level: Administrator</div>
+                <div id="userDivision">Divisi: IT</div>
+              </div>
+            </div>
+            <div class="user-dropdown">
+              <a href="#" class="dropdown-item">
+                <span>👤</span> Profil
+              </a>
+              <a href="#" class="dropdown-item">
+                <span>⚙️</span> Pengaturan
+              </a>
+              <a href="#" class="dropdown-item logout" onclick="logout()">
+                <span>🚪</span> Logout
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -670,34 +855,34 @@
         </div>
 
         <div class="card-container">
-          <div class="card" onclick="window.location.href='gudang/index.html'">
+          <div class="card" onclick="window.location.href='raw-material/index.html'">
             <div class="card-icon">📦</div>
-            <h3>Gudang</h3>
-            <p>Status kapasitas dan stok racking untuk monitoring inventory secara real-time.</p>
+            <h3>Raw Material & Packaging</h3>
+            <p>Monitoring bahan baku dan kemasan untuk kelancaran produksi dan inventory management.</p>
           </div>
 
-          <div class="card" onclick="window.location.href='pegawai/index.html'">
-            <div class="card-icon">👨‍💼</div>
-            <h3>Pegawai</h3>
-            <p>Data karyawan, divisi, dan level akses untuk manajemen SDM yang efektif.</p>
+          <div class="card" onclick="window.location.href='finish-goods/index.html'">
+            <div class="card-icon">✅</div>
+            <h3>Finish Goods</h3>
+            <p>Status produk jadi siap distribusi dengan tracking kelengkapan dan kualitas produk.</p>
           </div>
 
-          <div class="card" onclick="window.location.href='laporan/index.html'">
-            <div class="card-icon">📑</div>
-            <h3>Laporan</h3>
-            <p>Rekap laporan aktivitas gudang dan analisis data untuk insight bisnis.</p>
+          <div class="card" onclick="window.location.href='status-kapasitas/index.html'">
+            <div class="card-icon">📊</div>
+            <h3>Status Kapasitas Gudang</h3>
+            <p>Real-time monitoring kapasitas gudang untuk optimalisasi ruang penyimpanan dan distribusi.</p>
           </div>
 
-          <div class="card" onclick="window.location.href='setting.html'">
-            <div class="card-icon">⚙️</div>
-            <h3>Setting</h3>
-            <p>Konfigurasi sistem dan pengguna untuk optimalisasi penggunaan aplikasi.</p>
+          <div class="card" onclick="window.location.href='card-stock/index.html'">
+            <div class="card-icon">📋</div>
+            <h3>Card Stock</h3>
+            <p>Manajemen kartu stok untuk pencatatan keluar masuk barang dan kontrol inventory.</p>
           </div>
 
           <div class="card">
-            <div class="card-icon">📊</div>
-            <h3>Analitik</h3>
-            <p>Insight data visual dan grafik untuk monitoring performa operasional gudang.</p>
+            <div class="card-icon">📋</div>
+            <h3>Report Salah Muat</h3>
+            <p>Laporan kesalahan muat barang untuk evaluasi dan perbaikan proses operasional gudang.</p>
           </div>
 
           <div class="card">
@@ -715,6 +900,96 @@
   </div>
 
   <script>
+    // Function to get greeting based on current time
+    function getGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      
+      if (hour >= 5 && hour < 11) {
+        return { text: 'Selamat Pagi', icon: '🌅' };
+      } else if (hour >= 11 && hour < 15) {
+        return { text: 'Selamat Siang', icon: '☀️' };
+      } else if (hour >= 15 && hour < 18) {
+        return { text: 'Selamat Sore', icon: '🌤️' };
+      } else {
+        return { text: 'Selamat Malam', icon: '🌙' };
+      }
+    }
+
+    // Function to update greeting
+    function updateGreeting() {
+      const greeting = getGreeting();
+      document.getElementById('greetingText').textContent = greeting.text;
+      document.getElementById('greetingIcon').textContent = greeting.icon;
+    }
+
+    // Function to get user initials from name
+    function getUserInitials(name) {
+      if (!name) return 'U';
+      return name.split(' ')
+                 .map(word => word.charAt(0).toUpperCase())
+                 .join('')
+                 .substring(0, 2);
+    }
+
+    // Function to load user data from localStorage
+    function loadUserData() {
+      try {
+        // Check if user data exists in localStorage (from your login system)
+        const userDataString = localStorage.getItem('user');
+        
+        if (!userDataString) {
+          // If no user data found, show login prompt
+          document.getElementById('loginPrompt').style.display = 'flex';
+          return;
+        }
+
+        // Parse user data from JSON
+        const userData = JSON.parse(userDataString);
+
+        // Validate required fields
+        if (!userData.nama || !userData.level || !userData.divisi) {
+          document.getElementById('loginPrompt').style.display = 'flex';
+          return;
+        }
+
+        // Update UI with user data
+        document.getElementById('userName').textContent = userData.nama;
+        document.getElementById('userLevel').textContent = `Level: ${userData.level}`;
+        document.getElementById('userDivision').textContent = `Divisi: ${userData.divisi}`;
+        document.getElementById('userAvatar').textContent = getUserInitials(userData.nama);
+
+        // Hide login prompt if visible
+        document.getElementById('loginPrompt').style.display = 'none';
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('loginPrompt').style.display = 'flex';
+      }
+    }
+
+    // Function to redirect to login page
+    function redirectToLogin() {
+      window.location.href = 'login.html'; // Sesuaikan dengan nama file login Anda
+    }
+
+    // Function to logout
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin logout?')) {
+        // Clear user data from localStorage (same key as your login system)
+        localStorage.removeItem('user');
+        
+        // Reset UI to default
+        document.getElementById('userName').textContent = 'Guest';
+        document.getElementById('userLevel').textContent = 'Level: -';
+        document.getElementById('userDivision').textContent = 'Divisi: -';
+        document.getElementById('userAvatar').textContent = 'G';
+        
+        // Show login prompt or redirect to login page
+        document.getElementById('loginPrompt').style.display = 'flex';
+      }
+    }
+
     // Toggle sidebar collapse
     function toggleCollapse() {
       const sidebar = document.getElementById('sidebar');
@@ -746,6 +1021,15 @@
 
     // Load collapse state on page load
     window.addEventListener('load', function() {
+      // Load user data
+      loadUserData();
+      
+      // Update greeting
+      updateGreeting();
+      
+      // Update greeting every minute
+      setInterval(updateGreeting, 60000);
+      
       const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
       const sidebar = document.getElementById('sidebar');
       const mainContent = document.getElementById('mainContent');
@@ -815,6 +1099,13 @@
         // Remove collapse state on mobile
         sidebar.classList.remove('collapsed');
         mainContent.classList.remove('collapsed');
+      }
+    });
+
+    // Listen for storage changes (if user logs in from another tab)
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'user') {
+        loadUserData();
       }
     });
   </script>
